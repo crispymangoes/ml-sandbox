@@ -1,6 +1,16 @@
+pub mod data;
+pub mod dataset;
+pub mod model;
 pub mod titanic_preprocessor;
+pub mod training;
 use crate::titanic_preprocessor::TitanicPreprocessor;
+use crate::{dataset::TitanicDataset, model::TitanicModelConfig, training::TitanicTrainingConfig};
+use burn::{
+    backend::{Autodiff, Wgpu},
+    optim::AdamConfig,
+};
 use polars::prelude::*;
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Titanic Training Pipeline ===\n");
 
@@ -23,7 +33,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let unique_decks = preprocessor.get_unique_titles()?;
     println!("{:?}", unique_decks);
 
-    preprocessor.to_features(false)?;
+    let (features, labels) = preprocessor.to_features(true)?;
+    let labels = labels.unwrap();
+
+    let dataset = TitanicDataset::new(features, labels);
+
+    type MyBackend = Wgpu<f32, i32>;
+    type MyAutodiffBackend = Autodiff<MyBackend>;
+
+    let device = burn::backend::wgpu::WgpuDevice::default();
+    let artifact_dir = "./tmp/guide";
+    crate::training::train::<MyAutodiffBackend>(
+        artifact_dir,
+        TitanicTrainingConfig::new(TitanicModelConfig::default(), AdamConfig::new()),
+        dataset,
+        device.clone(),
+    );
 
     Ok(())
 }
