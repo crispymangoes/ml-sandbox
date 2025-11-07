@@ -40,6 +40,14 @@ impl TitanicPreprocessor {
                     // Calculate the mean fare partitioned by Pclass
                     .fill_null(col("Fare").mean().over(["Pclass"]))
                     // Alias it back to Fare to overwrite original column
+                    .alias("PreFare"),
+            )
+            // Make sure any zero fares are set to the mean fare for the class
+            .with_column(
+                when(col("PreFare").eq(lit(0.0)))
+                    .then(col("PreFare").mean().over(["Pclass"]))
+                    .otherwise(col("PreFare"))
+                    // Alias it back to Fare to overwrite original column
                     .alias("Fare"),
             )
             .with_column(
@@ -124,15 +132,9 @@ impl TitanicPreprocessor {
         let lf = self.df.lazy();
         let processed_lf = lf
             // Scale Age column
-            .with_column(
-                (col("Age") - col("Age").min())
-                    / (col("Age").max() - col("Age").min()).alias("Age"),
-            )
+            .with_column((col("Age") - col("Age").mean()) / (col("Age").std(1)).alias("Age"))
             // Scale Fare column
-            .with_column(
-                (col("Fare") - col("Fare").min())
-                    / (col("Fare").max() - col("Fare").min()).alias("Fare"),
-            )
+            .with_column((col("Fare") - col("Fare").mean()) / (col("Fare").std(1)).alias("Fare"))
             // Convert Sex to binary
             .with_column(
                 when(col("Sex").eq(lit("male")))
@@ -159,12 +161,16 @@ impl TitanicPreprocessor {
                     .otherwise(lit(0.0))
                     .alias("Pclass3"),
             )
-            // Scale FamilySize
+            // Convert FamilySize to f64
             .with_column(
-                (col("FamilySize") - col("FamilySize").min()).cast(DataType::Float64)
-                    / (col("FamilySize").max() - col("FamilySize").min())
-                        .cast(DataType::Float64)
-                        .alias("FamilySize"),
+                col("FamilySize")
+                    .cast(DataType::Float64)
+                    .alias("FamilySize"),
+            )
+            // Apply Z score to FamilySize
+            .with_column(
+                (col("FamilySize") - col("FamilySize").mean())
+                    / (col("FamilySize").std(1)).alias("FamilySize"),
             )
             // Convert DeckLevel to OHE
             .with_column(
@@ -290,19 +296,17 @@ impl TitanicPreprocessor {
                     .otherwise(lit(0.0))
                     .alias("Title7"),
             )
-            // Scale SibSp
+            // Convert SibSp to f64
+            .with_column(col("SibSp").cast(DataType::Float64).alias("SibSp"))
+            // Apply Z score to SibSp
             .with_column(
-                (col("SibSp") - col("SibSp").min()).cast(DataType::Float64)
-                    / (col("SibSp").max() - col("SibSp").min())
-                        .cast(DataType::Float64)
-                        .alias("SibSp"),
+                (col("SibSp") - col("SibSp").mean()) / (col("SibSp").std(1)).alias("SibSp"),
             )
-            // Scale Parch
+            // Convert Parch to f64
+            .with_column(col("Parch").cast(DataType::Float64).alias("Parch"))
+            // Apply Z score to Parch
             .with_column(
-                (col("Parch") - col("Parch").min()).cast(DataType::Float64)
-                    / (col("Parch").max() - col("Parch").min())
-                        .cast(DataType::Float64)
-                        .alias("Parch"),
+                (col("Parch") - col("Parch").mean()) / (col("Parch").std(1)).alias("Parch"),
             )
             .select([
                 col("Pclass1"),

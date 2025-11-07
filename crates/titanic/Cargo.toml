@@ -7,3 +7,4 @@ edition = "2024"
 ndarray = { workspace = true }
 polars = { workspace = true }
 burn = { workspace = true }
+csv = { workspace = true }

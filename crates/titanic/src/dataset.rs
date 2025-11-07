@@ -29,6 +29,25 @@ impl TitanicDataset {
         }
     }
 
+    pub fn new_no_labels(features: ndarray::Array2<f32>) -> Self {
+        let n_rows = features.nrows();
+        let n_cols = features.ncols();
+
+        // Covnert to Vec<Vec<f32>>
+        let mut features_vec = Vec::with_capacity(n_rows);
+        let mut empty_vec = Vec::with_capacity(n_rows);
+        for i in 0..n_rows {
+            let row: Vec<f32> = (0..n_cols).map(|j| features[[i, j]]).collect();
+            features_vec.push(row);
+            empty_vec.push(0);
+        }
+
+        Self {
+            features: features_vec,
+            labels: empty_vec,
+        }
+    }
+
     /// Create train/val split
     pub fn split(self, train_ratio: f32) -> (Self, Self) {
         let n_total = self.features.len();

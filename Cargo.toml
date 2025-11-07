@@ -8,3 +8,4 @@ resolver = "3"
 ndarray = "0.15.6"
 polars = { version = "0.44.0", features = ["lazy", "csv", "dtype-full", "strings", "is_in", "polars-ops", "to_dummies", "ndarray"] }
 burn = { version = "0.19.0", features = ["train", "ndarray", "webgpu"] }
+csv = "1.4.0"

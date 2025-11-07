@@ -38,22 +38,6 @@ impl Default for TitanicModelConfig {
 }
 
 impl TitanicModelConfig {
-    // pub fn new(
-    //     input_size: usize,
-    //     hidden1: usize,
-    //     hidden2: usize,
-    //     hidden3: usize,
-    //     dropout_rate: f64,
-    // ) -> Self {
-    //     Self {
-    //         input_size,
-    //         hidden1,
-    //         hidden2,
-    //         hidden3,
-    //         dropout_rate,
-    //     }
-    // }
-
     pub fn init<B: Backend>(&self, device: &B::Device) -> TitanicModel<B> {
         TitanicModel {
             fc1: LinearConfig::new(self.input_size, self.hidden1).init(device),
@@ -73,12 +57,12 @@ impl<B: Backend> TitanicModel<B> {
     pub fn forward(&self, input: Tensor<B, 2>) -> Tensor<B, 2> {
         // First layer: input -> hidden1
         let x = self.fc1.forward(input);
-        let x = activation::gelu(x);
+        let x = activation::relu(x);
         let x = self.dropout1.forward(x);
 
         // Second layer: hidden1 -> hidden2
         let x = self.fc2.forward(x);
-        let x = activation::gelu(x);
+        let x = activation::relu(x);
         let x = self.dropout2.forward(x);
 
         // Third layer: hidden2 -> hidden3

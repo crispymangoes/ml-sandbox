@@ -6829,6 +6829,7 @@ name = "titanic"
 version = "0.1.0"
 dependencies = [
  "burn",
+ "csv",
  "ndarray 0.15.6",
  "polars",
 ]
