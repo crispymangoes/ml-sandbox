@@ -6,7 +6,7 @@ pub mod training;
 use crate::titanic_preprocessor::TitanicPreprocessor;
 use crate::{dataset::TitanicDataset, model::TitanicModelConfig, training::TitanicTrainingConfig};
 use burn::{
-    backend::{Autodiff, Wgpu},
+    backend::{Autodiff, NdArray, Wgpu},
     optim::AdamConfig,
 };
 use polars::prelude::*;
@@ -38,10 +38,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let dataset = TitanicDataset::new(features, labels);
 
-    type MyBackend = Wgpu<f32, i32>;
+    // type MyBackend = Wgpu<f32, i32>;
+    type MyBackend = NdArray<f32, i32>;
     type MyAutodiffBackend = Autodiff<MyBackend>;
 
-    let device = burn::backend::wgpu::WgpuDevice::default();
+    let device = burn::backend::ndarray::NdArrayDevice::default();
     let artifact_dir = "./tmp/guide";
     crate::training::train::<MyAutodiffBackend>(
         artifact_dir,
