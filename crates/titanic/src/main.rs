@@ -5,6 +5,7 @@ pub mod titanic_preprocessor;
 pub mod training;
 use crate::titanic_preprocessor::TitanicPreprocessor;
 use crate::{dataset::TitanicDataset, model::TitanicModelConfig, training::TitanicTrainingConfig};
+use burn::grad_clipping::GradientClippingConfig;
 use burn::{
     backend::{Autodiff, NdArray, Wgpu},
     optim::AdamConfig,
@@ -39,14 +40,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let dataset = TitanicDataset::new(features, labels);
 
     // type MyBackend = Wgpu<f32, i32>;
-    type MyBackend = NdArray<f32, i32>;
+    type MyBackend = NdArray<f64, i32>;
     type MyAutodiffBackend = Autodiff<MyBackend>;
 
     let device = burn::backend::ndarray::NdArrayDevice::default();
     let artifact_dir = "./tmp/guide";
+    let gradient_clipping_config = GradientClippingConfig::Value(0.1);
     crate::training::train::<MyAutodiffBackend>(
         artifact_dir,
-        TitanicTrainingConfig::new(TitanicModelConfig::default(), AdamConfig::new()),
+        TitanicTrainingConfig::new(
+            TitanicModelConfig::default(),
+            AdamConfig::new().with_grad_clipping(Some(gradient_clipping_config)),
+        ),
         dataset,
         device.clone(),
     );

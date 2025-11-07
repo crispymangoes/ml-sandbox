@@ -73,27 +73,31 @@ impl<B: Backend> TitanicModel<B> {
     pub fn forward(&self, input: Tensor<B, 2>) -> Tensor<B, 2> {
         // First layer: input -> hidden1
         let x = self.fc1.forward(input);
-        let x = activation::relu(x);
+        let x = activation::gelu(x);
         let x = self.dropout1.forward(x);
 
         // Second layer: hidden1 -> hidden2
         let x = self.fc2.forward(x);
-        let x = activation::relu(x);
+        let x = activation::gelu(x);
         let x = self.dropout2.forward(x);
 
         // Third layer: hidden2 -> hidden3
         let x = self.fc3.forward(x);
-        let x = activation::relu(x);
+        let x = activation::gelu(x);
         let x = self.dropout3.forward(x);
 
-        // Output layer: hidden3 -> 1 (probability)
-        let x = self.output.forward(x);
-        activation::sigmoid(x) // Sigmoid to get probability [0, 1]
+        // Output layer: hidden3 -> 1 (raw logits)
+        self.output.forward(x)
     }
 
     /// Make predictions (0 or 1) from input features
     pub fn predict(&self, input: Tensor<B, 2>) -> Tensor<B, 2> {
-        let probs = self.forward(input);
+        // Get raw logits
+        let logits = self.forward(input);
+
+        // Apply sigmoid to get probabilities [0, 1]
+        let probs = activation::sigmoid(logits);
+
         // Convert probabilities to binary predictions (threshold at 0.5)
         probs.greater_elem(0.5).float()
     }

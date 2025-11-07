@@ -52,7 +52,7 @@ impl<B: Backend> ValidStep<TitanicBatch<B>, ClassificationOutput<B>> for Titanic
 pub struct TitanicTrainingConfig {
     pub model: TitanicModelConfig,
     pub optimizer: AdamConfig,
-    #[config(default = 1000)]
+    #[config(default = 1)]
     pub num_epochs: usize,
     #[config(default = 64)]
     pub batch_size: usize,
@@ -60,7 +60,7 @@ pub struct TitanicTrainingConfig {
     pub num_workers: usize,
     #[config(default = 42)]
     pub seed: u64,
-    #[config(default = 1.0e-5)]
+    #[config(default = 1.0e-4)]
     pub learning_rate: f64,
 }
 
@@ -75,6 +75,7 @@ pub fn train<B: AutodiffBackend>(
     dataset: TitanicDataset,
     device: B::Device,
 ) {
+    println!("Learning Rate: {}", config.learning_rate);
     create_artifact_dir(artifact_dir);
     config
         .save(format!("{artifact_dir}/config.json"))

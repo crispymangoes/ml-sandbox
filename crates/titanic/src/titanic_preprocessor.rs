@@ -161,8 +161,10 @@ impl TitanicPreprocessor {
             )
             // Scale FamilySize
             .with_column(
-                (col("FamilySize") - col("FamilySize").min())
-                    / (col("FamilySize").max() - col("FamilySize").min()).alias("FamilySize"),
+                (col("FamilySize") - col("FamilySize").min()).cast(DataType::Float64)
+                    / (col("FamilySize").max() - col("FamilySize").min())
+                        .cast(DataType::Float64)
+                        .alias("FamilySize"),
             )
             // Convert DeckLevel to OHE
             .with_column(
@@ -335,9 +337,16 @@ impl TitanicPreprocessor {
                 col("Survived"),
             ]);
 
-        let result = processed_lf.collect()?;
+        let mut result = processed_lf.collect()?;
 
         println!("{}", result.head(Some(10)));
+
+        let mut file = std::fs::File::create("output.csv")?;
+        CsvWriter::new(&mut file)
+            .include_header(true) // Include header row
+            .with_separator(b',') // Set separator to comma (default)
+            .with_null_value("NULL".to_string()) // Represent nulls as "NULL"
+            .finish(&mut result)?; // Write the DataFrame
 
         let n_rows = result.height();
         let n_cols = result.width() - 1; // Exclude survived
