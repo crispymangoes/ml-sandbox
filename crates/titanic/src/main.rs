@@ -78,7 +78,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut passenger_id = 892;
     let mut predictions = Vec::new();
     let mut right = 0;
-    let mut wrong = 0;
     for i in 0..test_dataset.len() {
         let (prediction, label) =
             infer::<MyBackend>(artifact_dir, device, test_dataset.get(i).unwrap());
@@ -86,8 +85,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         passenger_id += 1;
         if prediction == label {
             right += 1;
-        } else {
-            wrong += 1;
         }
     }
 
